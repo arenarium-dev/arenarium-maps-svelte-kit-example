@@ -8,7 +8,7 @@
 	import { PUBLIC_ARENARIUM_MAPS_API_KEY } from "$env/static/public";
 
 	import { MapManager, type MapMarker } from "@arenarium/maps";
-	import { MapLibreProvider, MapLibreLightStyle } from "@arenarium/maps/maplibre";
+	import { MaplibreProvider, MaplibreLightStyle } from "@arenarium/maps/maplibre";
 	import "@arenarium/maps/dist/style.css";
 
 	import maplibregl from "maplibre-gl";
@@ -19,9 +19,9 @@
 	let mapContainer: HTMLDivElement;
 
 	onMount(() => {
-		const mapProvider = new MapLibreProvider(maplibregl.Map, maplibregl.Marker, {
+		const mapProvider = new MaplibreProvider(maplibregl.Map, maplibregl.Marker, {
 			container: mapContainer,
-			style: MapLibreLightStyle,
+			style: MaplibreLightStyle,
 			center: { lat: 51.505, lng: -0.09 },
 			zoom: 13,
 		});
