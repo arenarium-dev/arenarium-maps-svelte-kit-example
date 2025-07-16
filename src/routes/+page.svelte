@@ -5,8 +5,6 @@
 	import Popup from "$lib/Popup.svelte";
 	import Tooltip from "$lib/Tooltip.svelte";
 
-	import { PUBLIC_ARENARIUM_MAPS_API_KEY } from "$env/static/public";
-
 	import { MapManager, type MapMarker } from "@arenarium/maps";
 	import { MaplibreProvider, MaplibreLightStyle } from "@arenarium/maps/maplibre";
 	import "@arenarium/maps/dist/style.css";
@@ -26,7 +24,7 @@
 			zoom: 13,
 		});
 
-		mapManager = new MapManager(PUBLIC_ARENARIUM_MAPS_API_KEY, mapProvider);
+		mapManager = new MapManager(mapProvider);
 
 		map = mapProvider.getMap();
 		map.on("click", onMapClick);
