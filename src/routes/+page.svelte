@@ -5,6 +5,8 @@
 	import Popup from "$lib/Popup.svelte";
 	import Tooltip from "$lib/Tooltip.svelte";
 
+	import { PUBLIC_API_KEY } from "$env/static/public";
+
 	import { MapManager, type MapMarker } from "@arenarium/maps";
 	import { MaplibreProvider, MaplibreLightStyle } from "@arenarium/maps/maplibre";
 	import "@arenarium/maps/dist/style.css";
@@ -24,7 +26,13 @@
 			zoom: 13,
 		});
 
-		mapManager = new MapManager(mapProvider);
+		mapManager = new MapManager(mapProvider, {
+			api: {
+				states: {
+					key: PUBLIC_API_KEY,
+				},
+			},
+		});
 
 		map = mapProvider.getMap();
 		map.on("click", onMapClick);
@@ -44,7 +52,7 @@
 		];
 		const radius = 10;
 		const count = 1024;
-		const limit = 256;
+		const limit = 128;
 
 		let randomPrev = 1;
 		const random = () => {
@@ -63,7 +71,7 @@
 			const lat = center.lat + distance * (-1 + random() * 2);
 			const lng = center.lng + distance * (-1 + random() * 2);
 			if (lat < bounds._sw.lat || bounds._ne.lat < lat || lng < bounds._sw.lng || bounds._ne.lng < lng) continue;
-			if (cnt++ > limit) break;
+			if (cnt++ >= limit) break;
 
 			markers.push({
 				id: i.toString(),
