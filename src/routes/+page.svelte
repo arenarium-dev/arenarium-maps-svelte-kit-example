@@ -26,13 +26,7 @@
 			zoom: 13,
 		});
 
-		mapManager = new MapManager(mapProvider, {
-			api: {
-				states: {
-					key: PUBLIC_API_KEY,
-				},
-			},
-		});
+		mapManager = new MapManager(PUBLIC_API_KEY, mapProvider);
 
 		map = mapProvider.getMap();
 		map.on("click", onMapClick);
@@ -52,7 +46,7 @@
 		];
 		const radius = 10;
 		const count = 1024;
-		const limit = 128;
+		const limit = 1024;
 
 		let randomPrev = 1;
 		const random = () => {
