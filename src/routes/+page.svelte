@@ -7,9 +7,9 @@
 
 	import { PUBLIC_API_KEY } from "$env/static/public";
 
-	import { MapManager, type MapMarker } from "@arenarium/maps";
-	import { MaplibreProvider, MaplibreLightStyle } from "@arenarium/maps/maplibre";
-	import "@arenarium/maps/dist/style.css";
+	import { MapManager, type MapMarkerData } from "@arenarium/maps";
+	import { MaplibreProvider, MaplibreLightStyle } from "@arenarium/maps-integration-maplibre";
+	import "@arenarium/maps/style.css";
 
 	import maplibregl from "maplibre-gl";
 	import "maplibre-gl/dist/maplibre-gl.css";
@@ -18,7 +18,9 @@
 	let map: maplibregl.Map;
 	let mapContainer: HTMLDivElement;
 
-	onMount(() => {
+	let mapMarkers = new Map<string, MapMarkerData>();
+
+	onMount(async () => {
 		const mapProvider = new MaplibreProvider(maplibregl.Map, maplibregl.Marker, {
 			container: mapContainer,
 			style: MaplibreLightStyle,
@@ -26,7 +28,7 @@
 			zoom: 13,
 		});
 
-		mapManager = new MapManager(PUBLIC_API_KEY, mapProvider);
+		mapManager = await MapManager.create(PUBLIC_API_KEY, mapProvider);
 
 		map = mapProvider.getMap();
 		map.on("click", onMapClick);
@@ -36,8 +38,6 @@
 
 	async function update() {
 		const bounds = map.getBounds();
-		const markers = new Array<MapMarker>();
-
 		const centers = [
 			{ lat: 51.505, lng: -0.09 },
 			{ lat: 45, lng: 22 },
@@ -48,53 +48,53 @@
 		const count = 1024;
 		const limit = 1024;
 
-		let randomPrev = 1;
-		const random = () => {
-			const val = (randomPrev * 16807) % 2147483647;
-			randomPrev = val;
-			return val / 2147483647;
-		};
-
-		let cnt = 0;
-
 		for (let i = 0; i < count; i++) {
-			const index = Math.floor(random() * count);
-			const distance = radius / (count - index);
+			const index = Math.floor(Math.random() * limit);
+			const id = index.toString();
+			if (mapMarkers.has(id)) continue;
+
+			const distance = radius / (limit - index);
 			const center = centers[index % centers.length];
 
-			const lat = center.lat + distance * (-1 + random() * 2);
-			const lng = center.lng + distance * (-1 + random() * 2);
+			const lat = center.lat + distance * (-1 + Math.random() * 2);
+			const lng = center.lng + distance * (-1 + Math.random() * 2);
 			if (lat < bounds._sw.lat || bounds._ne.lat < lat || lng < bounds._sw.lng || bounds._ne.lng < lng) continue;
-			if (cnt++ >= limit) break;
 
-			markers.push({
-				id: i.toString(),
-				rank: i,
+			mapMarkers.set(id, {
+				id: index.toString(),
+				rank: index,
 				lat: lat,
 				lng: lng,
 				tooltip: {
 					style: {
-						height: 64,
-						width: 96,
-						margin: 8,
-						radius: 12,
+						dimensions: {
+							height: 64,
+							width: 96,
+							margin: 8,
+							radius: 12,
+						}
 					},
 					body: getTooltipBody,
 				},
 				pin: {
 					style: {
-						height: 16,
-						width: 16,
-						radius: 8,
+						dimensions: {
+							height: 16,
+							width: 16,
+							radius: 8,
+							padding: 2,
+						}
 					},
 					body: getPinBody,
 				},
 				popup: {
 					style: {
-						height: 128,
-						width: 156,
-						margin: 8,
-						radius: 16,
+						dimensions: {
+							height: 128,
+							width: 156,
+							margin: 8,
+							radius: 16,
+						}
 					},
 					body: getPopupBody,
 				},
@@ -102,8 +102,8 @@
 		}
 
 		const now = performance.now();
-		await mapManager.updateMarkers(markers);
-		console.log(`[SET ${markers.length}] ${performance.now() - now}ms`);
+		await mapManager.updateMarkers(Array.from(mapMarkers.values()));
+		console.log(`[SET ${mapMarkers.size}] ${performance.now() - now}ms`);
 	}
 
 	function remove() {
