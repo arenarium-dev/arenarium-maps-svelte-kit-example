@@ -38,11 +38,8 @@
             },
         );
 
-        mapLibrary = await MapLibraryLoader.load();
-        mapManager = await mapLibrary.MapManager.create(
-            PUBLIC_API_KEY,
-            mapProvider,
-        );
+        const { MapManager } = await MapLibraryLoader.getLibrary();
+        mapManager = await MapManager.create(PUBLIC_API_KEY, mapProvider);
 
         map = mapProvider.getMap();
         map.on("click", onMapClick);
