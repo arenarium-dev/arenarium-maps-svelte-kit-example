@@ -18,7 +18,6 @@
     import maplibregl from "maplibre-gl";
     import "maplibre-gl/dist/maplibre-gl.css";
 
-    let mapLibrary: MapLibrary;
     let mapManager: MapManager;
 
     let map: maplibregl.Map;
