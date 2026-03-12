@@ -7,8 +7,12 @@
 
     import { PUBLIC_API_KEY } from "$env/static/public";
 
-    import { type MapManager, type MapMarkerProperties } from "@arenarium/maps";
-    import { MapLibraryLoader, type MapLibrary } from "@arenarium/maps-loader";
+    import {
+        MapLibraryLoader,
+        type MapLibrary,
+        type MapManager,
+        type MapMarkerProperties,
+    } from "@arenarium/maps-loader";
     import {
         MaplibreProvider,
         MaplibreLightStyle,
