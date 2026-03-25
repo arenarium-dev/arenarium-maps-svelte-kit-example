@@ -7,12 +7,7 @@
 
     import { PUBLIC_API_KEY } from "$env/static/public";
 
-    import {
-        MapLibraryLoader,
-        type MapLibrary,
-        type MapManager,
-        type MapMarkerProperties,
-    } from "@arenarium/maps-loader";
+    import { MapManager, type MapMarkerProperties } from "@arenarium/maps";
     import {
         MaplibreProvider,
         MaplibreLightStyle,
@@ -41,7 +36,6 @@
             },
         );
 
-        const { MapManager } = await MapLibraryLoader.getLibrary();
         mapManager = await MapManager.create(PUBLIC_API_KEY, mapProvider);
 
         map = mapProvider.getMap();
@@ -99,12 +93,11 @@
                 pin: {
                     element: getPinBody(id),
                     dimensions: {
-                        height: 16,
-                        width: 16,
-                        padding: 0,
+                        radius: 8,
+                        stroke: 2,
                     },
                     style: {
-                        radius: 8,
+                        background: "#ff00ff",
                     },
                 },
                 popup: {
