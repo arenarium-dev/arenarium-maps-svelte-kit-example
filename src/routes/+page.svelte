@@ -12,29 +12,24 @@
         MaplibreProvider,
         MaplibreLightStyle,
     } from "@arenarium/maps-integration-maplibre";
-    import "@arenarium/maps/style.css";
-
-    import maplibregl from "maplibre-gl";
-    import "maplibre-gl/dist/maplibre-gl.css";
+    import "@arenarium/maps-integration-maplibre/main.css";
 
     let mapManager: MapManager;
 
     let map: maplibregl.Map;
-    let mapContainer: HTMLDivElement;
+    let mapContainer = $state<HTMLDivElement>();
 
     let mapMarkers = new Map<string, MapMarkerProperties>();
 
     onMount(async () => {
-        const mapProvider = new MaplibreProvider(
-            maplibregl.Map,
-            maplibregl.Marker,
-            {
-                container: mapContainer,
-                style: MaplibreLightStyle,
-                center: { lat: 51.505, lng: -0.09 },
-                zoom: 13,
-            },
-        );
+        if (!mapContainer) return;
+
+        const mapProvider = await MaplibreProvider.create({
+            container: mapContainer,
+            style: MaplibreLightStyle,
+            center: { lat: 51.505, lng: -0.09 },
+            zoom: 13,
+        });
 
         mapManager = await MapManager.create(PUBLIC_API_KEY, mapProvider);
 
@@ -76,7 +71,7 @@
 
             mapMarkers.set(id, {
                 id: id,
-                rank: index,
+                rank: index + 1,
                 lat: lat,
                 lng: lng,
                 tooltip: {
