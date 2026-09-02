@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@arenarium/maps':
-        specifier: ^1.4.3
-        version: 1.5.16
+        specifier: ^1.5.19
+        version: 1.5.19
       '@arenarium/maps-integration-maplibre':
-        specifier: ^1.0.36
-        version: 1.0.36
+        specifier: ^1.0.37
+        version: 1.0.37
     devDependencies:
       '@sveltejs/adapter-auto':
         specifier: ^7.0.1
@@ -42,11 +42,11 @@ importers:
 
 packages:
 
-  '@arenarium/maps-integration-maplibre@1.0.36':
-    resolution: {integrity: sha512-PXLNm4bbLO7a4x5xzv594KLesau9NRO4W0oIGeesD6znIEwSzAuCTMNJB28uRlSxrCEYtdOcfTtKxSvqjJFOdA==}
+  '@arenarium/maps-integration-maplibre@1.0.37':
+    resolution: {integrity: sha512-16j5uB99YOqlRKDOfp6LF2/HHDLCqDD/SDlGRTPiiR07y+gyzH2t0mcXCqOR/coUO/EYjeV0EIixCfF2iCTT+g==}
 
-  '@arenarium/maps@1.5.16':
-    resolution: {integrity: sha512-mUUWRjKBMuVYRMTmQZ24TYrJVQt44tOIKiLDH8UWunpqUmQABuSWrw1fHctMX6pat4rnerlgaW+TUZTpaUdeeg==}
+  '@arenarium/maps@1.5.19':
+    resolution: {integrity: sha512-o44Z4GXLi2NQEofUtOhzJ1YxaDpMaswLqfbVi4Q6pIyiRp4MDueAws3a/Fjx2abLOr3y46B5ckw3wc2lqzMqog==}
 
   '@emnapi/core@1.11.1':
     resolution: {integrity: sha512-RSvbQmHzdKzNsLYa/wHrbc3KN4sYLKAdPZxqiM2HATqv/SBk2/ENSHpvXGaLOMcsAyz0poEGqkmmKYG3OWiJEQ==}
@@ -700,12 +700,12 @@ packages:
 
 snapshots:
 
-  '@arenarium/maps-integration-maplibre@1.0.36':
+  '@arenarium/maps-integration-maplibre@1.0.37':
     dependencies:
       '@types/geojson': 7946.0.16
       maplibre-gl: 5.24.0
 
-  '@arenarium/maps@1.5.16': {}
+  '@arenarium/maps@1.5.19': {}
 
   '@emnapi/core@1.11.1':
     dependencies:
