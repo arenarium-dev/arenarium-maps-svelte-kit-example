@@ -3,6 +3,9 @@
     "private": true,
     "version": "0.0.1",
     "type": "module",
+    "imports": {
+        "#lib/*": "./src/lib/*"
+    },
     "scripts": {
         "dev": "vite dev --port 3000",
         "build": "vite build",
@@ -12,17 +15,17 @@
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
     },
     "devDependencies": {
-        "@sveltejs/adapter-auto": "^7.0.1",
-        "@sveltejs/kit": "^2.55.0",
-        "@sveltejs/vite-plugin-svelte": "^7.0.0",
-        "less": "^4.6.4",
-        "svelte": "^5.55.0",
-        "svelte-check": "^4.4.5",
-        "typescript": "^5.9.3",
-        "vite": "^8.0.2"
+        "@sveltejs/adapter-auto": "^9.0.0",
+        "@sveltejs/kit": "^3.4.0",
+        "@sveltejs/vite-plugin-svelte": "^7.3.1",
+        "less": "^4.9.1",
+        "svelte": "^5.59.1",
+        "svelte-check": "^4.7.8",
+        "typescript": "^6.0.3",
+        "vite": "^8.3.8"
     },
     "dependencies": {
-        "@arenarium/maps": "^1.5.19",
-        "@arenarium/maps-integration-maplibre": "^1.0.37"
+        "@arenarium/maps": "^2.0.0",
+        "@arenarium/maps-integration-maplibre": "^2.0.0"
     }
 }

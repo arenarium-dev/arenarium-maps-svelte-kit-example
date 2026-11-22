@@ -1,46 +1,52 @@
 <script lang="ts">
     import { mount, onMount } from "svelte";
 
-    import Pin from "$lib/Pin.svelte";
-    import Popup from "$lib/Popup.svelte";
-    import Tooltip from "$lib/Tooltip.svelte";
+    import Pin from "#lib/Pin.svelte";
+    import Popup from "#lib/Popup.svelte";
+    import Tooltip from "#lib/Tooltip.svelte";
 
-    import { PUBLIC_API_KEY } from "$env/static/public";
+    import { PUBLIC_API_KEY } from "$app/env/public";
 
-    import { MapManager, type MapMarkerProperties } from "@arenarium/maps";
+    import {
+        MapLibrary,
+        type MapManager,
+        type MapMarkerOptions,
+    } from "@arenarium/maps";
     import {
         MaplibreProvider,
         MaplibreLightStyle,
     } from "@arenarium/maps-integration-maplibre";
     import "@arenarium/maps-integration-maplibre/main.css";
 
+    let mapProvider: MaplibreProvider;
     let mapManager: MapManager;
 
-    let map: maplibregl.Map;
     let mapContainer = $state<HTMLDivElement>();
 
-    let mapMarkers = new Map<string, MapMarkerProperties>();
+    let mapMarkers = new Map<string, MapMarkerOptions>();
 
     onMount(async () => {
         if (!mapContainer) return;
 
-        const mapProvider = await MaplibreProvider.create({
+        mapProvider = await MaplibreProvider.create({
             container: mapContainer,
             style: MaplibreLightStyle,
             center: { lat: 51.505, lng: -0.09 },
             zoom: 13,
         });
 
-        mapManager = await MapManager.create(PUBLIC_API_KEY, mapProvider);
-
-        map = mapProvider.getMap();
-        map.on("click", onMapClick);
+        // The manager opens the popup of a marker when its tooltip is clicked,
+        // and closes the popup when the map is clicked
+        const mapLibrary = await MapLibrary.load(PUBLIC_API_KEY);
+        mapManager = await mapLibrary.manager.create(
+            await mapLibrary.provider.adapt(mapProvider),
+        );
 
         update();
     });
 
     async function update() {
-        const bounds = map.getBounds();
+        const bounds = mapProvider.getBounds();
         const centers = [
             { lat: 51.505, lng: -0.09 },
             { lat: 45, lng: 22 },
@@ -62,10 +68,10 @@
             const lat = center.lat + distance * (-1 + Math.random() * 2);
             const lng = center.lng + distance * (-1 + Math.random() * 2);
             if (
-                lat < bounds._sw.lat ||
-                bounds._ne.lat < lat ||
-                lng < bounds._sw.lng ||
-                bounds._ne.lng < lng
+                lat < bounds.sw.lat ||
+                bounds.ne.lat < lat ||
+                lng < bounds.sw.lng ||
+                bounds.ne.lng < lng
             )
                 continue;
 
@@ -77,16 +83,16 @@
                 tooltip: {
                     element: getTooltipBody(id),
                     dimensions: {
-                        height: 64,
-                        width: 96,
+                        size: { height: 64, width: 96 },
                         padding: 8,
+                        margin: 1,
                     },
                     style: {
                         radius: 12,
                     },
                 },
                 pin: {
-                    element: getPinBody(id),
+                    element: getPinBody(),
                     dimensions: {
                         radius: 8,
                         stroke: 2,
@@ -98,8 +104,7 @@
                 popup: {
                     element: getPopupBody(id),
                     dimensions: {
-                        height: 128,
-                        width: 156,
+                        size: { height: 128, width: 156 },
                         padding: 8,
                     },
                     style: {
@@ -109,18 +114,18 @@
             });
         }
 
+        // Markers with an id that is already on the map are kept
         const now = performance.now();
-        await mapManager.updateMarkers(Array.from(mapMarkers.values()));
+        await mapManager.insertMarkers(Array.from(mapMarkers.values()));
         console.log(`[SET ${mapMarkers.size}] ${performance.now() - now}ms`);
     }
 
     function remove() {
-        mapManager.removeMarkers();
+        mapManager.clearMarkers();
     }
 
     function getTooltipBody(id: string): HTMLElement {
         const element = document.createElement("div");
-        element.addEventListener("click", (e) => onTooltipClick(e, id));
         mount(Tooltip, {
             target: element,
             props: { rank: Number.parseInt(id), width: 96, height: 64 },
@@ -128,7 +133,7 @@
         return element;
     }
 
-    function getPinBody(id: string): HTMLElement {
+    function getPinBody(): HTMLElement {
         const element = document.createElement("div");
         element.style.width = "100%";
         element.style.height = "100%";
@@ -143,15 +148,6 @@
             props: { rank: Number.parseInt(id), width: 156, height: 128 },
         });
         return element;
-    }
-
-    function onTooltipClick(event: Event, id: string) {
-        event.stopPropagation();
-        mapManager.showPopup(id);
-    }
-
-    function onMapClick() {
-        mapManager.hidePopup();
     }
 </script>
 
