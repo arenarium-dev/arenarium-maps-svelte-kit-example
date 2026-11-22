@@ -1,29 +1,31 @@
 <script lang="ts">
-	let props: { rank: number; width: number; height: number } = $props();
+    let { id, rank }: { id: string; rank: number } = $props();
 </script>
 
-<div class="tooltip" style="width: {props.width}px; height: {props.height}px;">
-	<div class="rank">Rank: {props.rank}</div>
-	<div class="dimensions">{props.width}x{props.height}</div>
+<div class="tooltip">
+    <div class="title">#{id}</div>
+    <div class="rank">Rank {rank}</div>
 </div>
 
 <style>
-	.tooltip {
-		width: 100%;
-		height: 100%;
-		display: flex;
+    .tooltip {
+        width: 100%;
+        height: 100%;
+        display: flex;
         flex-direction: column;
-		align-items: center;
-		justify-content: center;
-	}
+        align-items: center;
+        justify-content: center;
+        font-family: system-ui, sans-serif;
+    }
 
-	.rank {
-		font-size: 14px;
-		color: black;
-	}
+    .title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f1f1f;
+    }
 
-	.dimensions {
-		font-size: 12px;
-		color: gray;
-	}
+    .rank {
+        font-size: 11px;
+        color: #777777;
+    }
 </style>

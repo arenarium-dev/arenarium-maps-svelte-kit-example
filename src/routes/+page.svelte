@@ -1,181 +1,244 @@
 <script lang="ts">
-    import { mount, onMount } from "svelte";
-
-    import Pin from "#lib/Pin.svelte";
-    import Popup from "#lib/Popup.svelte";
-    import Tooltip from "#lib/Tooltip.svelte";
+    import { onMount } from "svelte";
 
     import { PUBLIC_API_KEY } from "$app/env/public";
 
     import {
-        MapLibrary,
-        type MapManager,
-        type MapMarkerOptions,
-    } from "@arenarium/maps";
-    import {
-        MaplibreProvider,
-        MaplibreLightStyle,
-    } from "@arenarium/maps-integration-maplibre";
+        DEFAULT_SETTINGS,
+        ExampleMap,
+        type MarkerSettings,
+    } from "#lib/library.js";
     import "@arenarium/maps-integration-maplibre/main.css";
 
-    let mapProvider: MaplibreProvider;
-    let mapManager: MapManager;
-
     let mapContainer = $state<HTMLDivElement>();
+    let example = $state.raw<ExampleMap>();
 
-    let mapMarkers = new Map<string, MapMarkerOptions>();
+    let busy = $state(false);
+    let count = $state(0);
+    let amount = $state(200);
+    let selected = $state<string>();
+    let settings = $state<MarkerSettings>({ ...DEFAULT_SETTINGS });
 
-    onMount(async () => {
-        if (!mapContainer) return;
+    onMount(() => {
+        let disposed = false;
+        let created: ExampleMap | undefined;
 
-        mapProvider = await MaplibreProvider.create({
-            container: mapContainer,
-            style: MaplibreLightStyle,
-            center: { lat: 51.505, lng: -0.09 },
-            zoom: 13,
-        });
+        ExampleMap.create(mapContainer!, PUBLIC_API_KEY, { ...settings }, (id) => (selected = id))
+            .then(async (map) => {
+                if (disposed) return map.dispose();
+                created = map;
+                example = map;
+                await run((map) => map.addMarkers(amount));
+            })
+            .catch((error) => console.error(error));
 
-        // The manager opens the popup of a marker when its tooltip is clicked,
-        // and closes the popup when the map is clicked
-        const mapLibrary = await MapLibrary.load(PUBLIC_API_KEY);
-        mapManager = await mapLibrary.manager.create(
-            await mapLibrary.provider.adapt(mapProvider),
-        );
-
-        update();
+        return () => {
+            disposed = true;
+            created?.dispose();
+        };
     });
 
-    async function update() {
-        const bounds = mapProvider.getBounds();
-        const centers = [
-            { lat: 51.505, lng: -0.09 },
-            { lat: 45, lng: 22 },
-            { lat: 52.52, lng: 13.409 },
-            { lat: 48.8566, lng: 2.3522 },
-        ];
-        const radius = 10;
-        const count = 1024;
-        const limit = 1024;
-
-        for (let i = 0; i < count; i++) {
-            const index = Math.floor(Math.random() * limit);
-            const id = index.toString();
-            if (mapMarkers.has(id)) continue;
-
-            const distance = radius / (limit - index);
-            const center = centers[index % centers.length];
-
-            const lat = center.lat + distance * (-1 + Math.random() * 2);
-            const lng = center.lng + distance * (-1 + Math.random() * 2);
-            if (
-                lat < bounds.sw.lat ||
-                bounds.ne.lat < lat ||
-                lng < bounds.sw.lng ||
-                bounds.ne.lng < lng
-            )
-                continue;
-
-            mapMarkers.set(id, {
-                id: id,
-                rank: index + 1,
-                lat: lat,
-                lng: lng,
-                tooltip: {
-                    element: getTooltipBody(id),
-                    dimensions: {
-                        size: { height: 64, width: 96 },
-                        padding: 8,
-                        margin: 1,
-                    },
-                    style: {
-                        radius: 12,
-                    },
-                },
-                pin: {
-                    element: getPinBody(),
-                    dimensions: {
-                        radius: 8,
-                        stroke: 2,
-                    },
-                    style: {
-                        background: "#ff00ff",
-                    },
-                },
-                popup: {
-                    element: getPopupBody(id),
-                    dimensions: {
-                        size: { height: 128, width: 156 },
-                        padding: 8,
-                    },
-                    style: {
-                        radius: 16,
-                    },
-                },
-            });
+    /** Runs an action on the map, one at a time, and updates the marker count after it. */
+    async function run(action: (map: ExampleMap) => Promise<void>) {
+        if (!example || busy) return;
+        busy = true;
+        try {
+            await action(example);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            count = example.count;
+            if (selected && !example.has(selected)) selected = undefined;
+            busy = false;
         }
-
-        // Markers with an id that is already on the map are kept
-        const now = performance.now();
-        await mapManager.insertMarkers(Array.from(mapMarkers.values()));
-        console.log(`[SET ${mapMarkers.size}] ${performance.now() - now}ms`);
     }
 
-    function remove() {
-        mapManager.clearMarkers();
+    function selectRandom() {
+        selected = example?.getRandomId();
+        if (selected) example?.showTooltip(selected);
     }
 
-    function getTooltipBody(id: string): HTMLElement {
-        const element = document.createElement("div");
-        mount(Tooltip, {
-            target: element,
-            props: { rank: Number.parseInt(id), width: 96, height: 64 },
-        });
-        return element;
-    }
-
-    function getPinBody(): HTMLElement {
-        const element = document.createElement("div");
-        element.style.width = "100%";
-        element.style.height = "100%";
-        mount(Pin, { target: element });
-        return element;
-    }
-
-    function getPopupBody(id: string): HTMLElement {
-        const element = document.createElement("div");
-        mount(Popup, {
-            target: element,
-            props: { rank: Number.parseInt(id), width: 156, height: 128 },
-        });
-        return element;
+    function setSetting<K extends keyof MarkerSettings>(key: K, value: MarkerSettings[K]) {
+        settings[key] = value;
+        run((map) => map.setSettings({ ...settings }));
     }
 </script>
 
 <div class="map" bind:this={mapContainer}></div>
 
-<div class="bottom">
-    <button class="button" onclick={update}> Update Markers </button>
-    <button class="button" onclick={remove}> Remove Markers </button>
-</div>
+<aside class="panel">
+    <header>
+        <h1>@arenarium/maps</h1>
+        <p>SvelteKit + MapLibre example</p>
+    </header>
+
+    <section>
+        <h2>Markers</h2>
+        <input type="number" min="1" max="10000" bind:value={amount} disabled={!example || busy} />
+        <div class="row">
+            <button onclick={() => run((map) => map.addMarkers(amount))} disabled={!example || busy || !(amount > 0)}>
+                Add
+            </button>
+            <button onclick={() => run((map) => map.clearMarkers())} disabled={!example || busy || count === 0}>
+                Clear
+            </button>
+        </div>
+    </section>
+
+    <section>
+        <h2>Orientation</h2>
+        <select
+            value={settings.orientation}
+            onchange={(e) => setSetting("orientation", e.currentTarget.value as MarkerSettings["orientation"])}
+            disabled={!example || busy}
+        >
+            <option value="dynamic">Dynamic</option>
+            <option value="centered">Centered</option>
+        </select>
+        <p class="hint">How tooltips and popups are placed around markers.</p>
+    </section>
+
+    <section>
+        <h2>Select</h2>
+        <p class="hint">
+            {#if selected}
+                Selected marker <strong>#{selected}</strong>
+            {:else}
+                Click a tooltip to select its marker.
+            {/if}
+        </p>
+        <button onclick={selectRandom} disabled={!example || busy || count === 0}>Random</button>
+    </section>
+
+    <section>
+        <h2>Popups</h2>
+        <div class="row">
+            <button
+                onclick={() => selected && example?.showPopup(selected)}
+                disabled={!selected || busy}
+            >
+                Show popup
+            </button>
+            <button onclick={() => example?.hidePopup()} disabled={!selected || busy}>
+                Hide popup
+            </button>
+        </div>
+    </section>
+</aside>
 
 <style>
+    :global(body) {
+        margin: 0;
+    }
+
     .map {
-        position: absolute;
-        top: 0px;
-        left: 0px;
-        width: 100%;
-        height: 100%;
-        background-color: gray;
-    }
-
-    .bottom {
         position: fixed;
-        bottom: 24px;
-        left: 24px;
+        inset: 0;
+        background-color: #e5e5e5;
     }
 
-    .button {
-        height: 32px;
-        border-radius: 8px;
+    .panel {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        z-index: 1;
+        width: 260px;
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
+        box-sizing: border-box;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        font-family: system-ui, sans-serif;
+        color: #1f1f1f;
+    }
+
+    header {
+        padding: 16px 16px 12px;
+        border-bottom: 1px solid #eeeeee;
+    }
+
+    h1 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    header p {
+        margin: 2px 0 0;
+        font-size: 12px;
+        color: #777777;
+    }
+
+    section {
+        padding: 12px 16px;
+        border-bottom: 1px solid #eeeeee;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    section:last-child {
+        border-bottom: none;
+    }
+
+    h2 {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #777777;
+    }
+
+    .row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .row > * {
+        flex: 1;
+    }
+
+    button,
+    select,
+    input {
+        height: 30px;
+        box-sizing: border-box;
+        padding: 0 10px;
+        font: inherit;
+        font-size: 13px;
+        color: inherit;
+        background: #ffffff;
+        border: 1px solid #d4d4d4;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    button:hover:not(:disabled),
+    select:hover:not(:disabled) {
+        background: #f5f5f5;
+    }
+
+    input {
+        cursor: text;
+    }
+
+    button:disabled,
+    select:disabled,
+    input:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+
+    .hint {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.4;
+        color: #777777;
+    }
+
+    .hint strong {
+        color: #1f1f1f;
     }
 </style>

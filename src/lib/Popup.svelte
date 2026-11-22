@@ -1,30 +1,58 @@
 <script lang="ts">
-	let props: { rank: number; width: number; height: number } = $props();
+    let {
+        id,
+        rank,
+        lat,
+        lng,
+    }: { id: string; rank: number; lat: number; lng: number } = $props();
 </script>
 
-<div class="tooltip" style="width: {props.width}px; height: {props.height}px;">
-	<div class="rank">Rank: {props.rank}</div>
-	<div class="dimensions">{props.width}x{props.height}</div>
+<div class="popup">
+    <div class="title">Marker #{id}</div>
+    <dl>
+        <dt>Rank</dt>
+        <dd>{rank}</dd>
+        <dt>Lat</dt>
+        <dd>{lat.toFixed(5)}</dd>
+        <dt>Lng</dt>
+        <dd>{lng.toFixed(5)}</dd>
+    </dl>
 </div>
 
 <style>
-	.tooltip {
-		width: 100%;
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-	}
+    .popup {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        padding: 6px 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        font-family: system-ui, sans-serif;
+    }
 
-	.rank {
-		font-size: 16px;
-        font-weight: bold;
-		color: green;
-	}
+    .title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f1f1f;
+    }
 
-	.dimensions {
-		font-size: 14px;
-		color: gray;
-	}
+    dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 10px;
+        font-size: 12px;
+    }
+
+    dt {
+        color: #777777;
+    }
+
+    dd {
+        margin: 0;
+        color: #1f1f1f;
+        font-variant-numeric: tabular-nums;
+    }
 </style>
